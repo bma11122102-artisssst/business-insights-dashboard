@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1217 321" role="img" aria-labelledby="title desc">
+  <title id="title">LeakLens</title><desc id="desc">Revenue Leakage Intelligence</desc>
+  <defs><linearGradient id="lens" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#159bfa"/><stop offset="1" stop-color="#0057ef"/></linearGradient><linearGradient id="rays" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#28dfcb"/><stop offset="1" stop-color="#039aff"/></linearGradient></defs>
+  <text x="35" y="218" fill="#071a40" font-family="Arial Black,Arial,sans-serif" font-size="210" font-weight="900" letter-spacing="-12" textLength="1000" lengthAdjust="spacingAndGlyphs">Leak<tspan fill="url(#lens)" letter-spacing="-11">Lens</tspan></text>
+  <g stroke="url(#rays)" stroke-width="26" stroke-linecap="round"><path d="M1070 79l35-39"/><path d="M1094 117l48-11"/><path d="M1080 155l39 29"/></g>
+  <text x="140" y="288" fill="#071a40" font-family="Arial,sans-serif" font-size="47" font-weight="700" letter-spacing="1">Revenue Leakage Intelligence</text>
+</svg>

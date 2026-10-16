@@ -1,0 +1,19 @@
+{
+  "dataset": "UCI Online Retail",
+  "creator": "Daqing Chen",
+  "year": 2015,
+  "doi": "10.24432/C5BW33",
+  "license": "CC BY 4.0",
+  "source_url": "https://archive.ics.uci.edu/dataset/352/online+retail",
+  "download_url": "https://archive.ics.uci.edu/static/public/352/online+retail.zip",
+  "archive_sha256": "f5385cbb54bbebf7196389109c6b0621faab0c304e3702548165e71c84aede8b",
+  "derived_sha256": "af239bea3f002a62235c91aed12225ad119d9eb31ad3758cfed8d4e15fc39522",
+  "original_rows": 541909,
+  "eligible_positive_sales_rows": 530104,
+  "excluded_rows": 11805,
+  "calendar_days": 374,
+  "start": "2010-12-01",
+  "end": "2011-12-09",
+  "transformation": "Exclude cancellation-prefixed invoices, nonpositive quantities/prices and missing dates; aggregate all countries by calendar date; fill absent dates with zero recorded sales. No deduplication. No customer IDs or descriptions retained. Last source date may be partial. Sales are positive recorded sales, not net revenue after returns.",
+  "scope": "Separate locally fitted demand benchmark; never joined to official Track 4 records. Currency is GBP, no currency conversion."
+}

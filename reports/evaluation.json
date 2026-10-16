@@ -1,0 +1,1310 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-10-16T10:43:31.994876+00:00",
+  "random_seed": 42,
+  "source": "Official DATATHON Track 4 synthetic business files. Raw files unchanged.",
+  "environment": {
+    "python": "3.12.15",
+    "pandas": "3.0.6",
+    "numpy": "2.5.4",
+    "scikit-learn": "1.9.1",
+    "statsmodels": "0.15.0",
+    "streamlit": "1.66.0"
+  },
+  "audit": {
+    "tables": {
+      "customers": {
+        "rows": 3000,
+        "columns": [
+          "customer_id",
+          "region",
+          "customer_segment",
+          "signup_date",
+          "preferred_channel"
+        ],
+        "missing_cells": 0,
+        "duplicate_rows": 0,
+        "primary_key": "customer_id",
+        "primary_key_unique": true,
+        "sha256": "7cec99b4018ba7f691ddcb16e9a929be6b71f0ef5cbeb6a6d2b0f0178f018a97"
+      },
+      "products": {
+        "rows": 250,
+        "columns": [
+          "product_id",
+          "category",
+          "unit_cost",
+          "list_price",
+          "supplier_lead_days"
+        ],
+        "missing_cells": 0,
+        "duplicate_rows": 0,
+        "primary_key": "product_id",
+        "primary_key_unique": true,
+        "sha256": "503ed7a22b271fb2b7609e7083fd3448c80374e4d801a956726355276d5cc293"
+      },
+      "transactions": {
+        "rows": 18000,
+        "columns": [
+          "transaction_id",
+          "customer_id",
+          "product_id",
+          "timestamp",
+          "quantity",
+          "unit_price",
+          "discount_pct",
+          "status",
+          "channel",
+          "payment_method"
+        ],
+        "missing_cells": 0,
+        "duplicate_rows": 0,
+        "primary_key": "transaction_id",
+        "primary_key_unique": true,
+        "sha256": "f5d51b998e0d353058677b1f6b8e8cda4e823a99f2921a216faf7f8dab3bc27a"
+      },
+      "inventory": {
+        "rows": 5000,
+        "columns": [
+          "inventory_record_id",
+          "product_id",
+          "date",
+          "stock_on_hand",
+          "reorder_threshold",
+          "stockout_flag",
+          "supplier_delay_days"
+        ],
+        "missing_cells": 0,
+        "duplicate_rows": 0,
+        "primary_key": "inventory_record_id",
+        "primary_key_unique": true,
+        "sha256": "bfec2567180676a509bb2a07e93b2739ee04db2d99b4150729351a3b75004bb0"
+      },
+      "campaigns": {
+        "rows": 1200,
+        "columns": [
+          "campaign_id",
+          "date",
+          "channel",
+          "category",
+          "spend",
+          "impressions",
+          "clicks",
+          "conversions"
+        ],
+        "missing_cells": 0,
+        "duplicate_rows": 0,
+        "primary_key": "campaign_id",
+        "primary_key_unique": true,
+        "sha256": "dce145a797887a0f03eeb2237925072de49332d0a21d7c0e8740eefc5b6314d4"
+      }
+    },
+    "total_rows": 27450,
+    "structural_contracts_passed": true,
+    "issues": [
+      {
+        "check": "orders_before_customer_signup",
+        "count": 797,
+        "handling": "Keep orders for sales totals; exclude signup-derived features from order prediction."
+      },
+      {
+        "check": "stock_flag_with_positive_units",
+        "count": 760,
+        "handling": "Show the conflict. Do not silently overwrite stock or claim a verified physical stockout."
+      },
+      {
+        "check": "campaign_conversions_above_clicks",
+        "count": 88,
+        "handling": "Keep raw analysis visible; exclude impossible count chains from campaign model training."
+      },
+      {
+        "check": "campaign_clicks_above_impressions",
+        "count": 84,
+        "handling": "Keep raw analysis visible; exclude impossible count chains from campaign model training."
+      },
+      {
+        "check": "completed_orders_below_recorded_cost",
+        "count": 5315,
+        "handling": "Costs and prices are independently generated; no audited profit or savings claims."
+      },
+      {
+        "check": "duplicate_product_inventory_dates",
+        "count": 114,
+        "handling": "For next-observation modeling keep the last record ID on a product/date; record the exclusion count."
+      }
+    ],
+    "source_url": "https://datathon-xi.vercel.app/problem-statements.html#track-4",
+    "raw_files_modified": false
+  },
+  "models": {
+    "order_outcomes": {
+      "task": "Predict Completed, Cancelled, or Returned using order-time attributes; Pending outcomes excluded from fitting.",
+      "selected_model": "prior_baseline",
+      "selection_metric": "lowest validation log loss",
+      "seed": 42,
+      "features": [
+        "Quantity",
+        "Unit price",
+        "discount_pct",
+        "hour",
+        "weekday",
+        "month",
+        "Product line",
+        "Region",
+        "Channel",
+        "Payment"
+      ],
+      "excluded_features": [
+        "Status (target)",
+        "customer_id",
+        "product_id",
+        "Customer type (profile timing unknown)",
+        "signup_date (inconsistent dates)",
+        "Total",
+        "Estimated margin",
+        "future inventory",
+        "campaign conversions"
+      ],
+      "split": {
+        "method": "chronological 60/20/20 by unique feature date; whole days never overlap",
+        "validation_start": "2025-08-08",
+        "test_start": "2025-10-20",
+        "excluded_boundary_rows": 2832,
+        "partitions": {
+          "train": {
+            "rows": 8883,
+            "start": "2025-01-01 00:11:00",
+            "end": "2025-07-08 22:42:00"
+          },
+          "validation": {
+            "rows": 2047,
+            "start": "2025-08-08 00:23:00",
+            "end": "2025-09-19 23:15:00"
+          },
+          "test": {
+            "rows": 3320,
+            "start": "2025-10-20 00:43:00",
+            "end": "2025-12-31 23:53:00"
+          }
+        },
+        "label_availability_rule": "Every training label date is strictly before validation starts; every validation label date is strictly before test starts.",
+        "assumed_outcome_maturation_days": 30
+      },
+      "resolved_rows": 17082,
+      "pending_rows": 918,
+      "validation": {
+        "prior_baseline": {
+          "log_loss": 0.5843386519392813,
+          "macro_f1": 0.3014896084203015,
+          "balanced_accuracy": 0.3333333333333333,
+          "confusion_matrix": [
+            [
+              0,
+              185,
+              0
+            ],
+            [
+              0,
+              1690,
+              0
+            ],
+            [
+              0,
+              172,
+              0
+            ]
+          ],
+          "class_order": [
+            "Cancelled",
+            "Completed",
+            "Returned"
+          ],
+          "risk_brier": 0.14401340420816783,
+          "risk_roc_auc": 0.5,
+          "risk_average_precision": 0.17440156326331216
+        },
+        "logistic_regression": {
+          "log_loss": 0.5875387539831456,
+          "macro_f1": 0.3014896084203015,
+          "balanced_accuracy": 0.3333333333333333,
+          "confusion_matrix": [
+            [
+              0,
+              185,
+              0
+            ],
+            [
+              0,
+              1690,
+              0
+            ],
+            [
+              0,
+              172,
+              0
+            ]
+          ],
+          "class_order": [
+            "Cancelled",
+            "Completed",
+            "Returned"
+          ],
+          "risk_brier": 0.14384850964159376,
+          "risk_roc_auc": 0.5275338537781976,
+          "risk_average_precision": 0.18837261229257918
+        },
+        "gradient_boosting": {
+          "log_loss": 0.5987432734776234,
+          "macro_f1": 0.3014896084203015,
+          "balanced_accuracy": 0.3333333333333333,
+          "confusion_matrix": [
+            [
+              0,
+              185,
+              0
+            ],
+            [
+              0,
+              1690,
+              0
+            ],
+            [
+              0,
+              172,
+              0
+            ]
+          ],
+          "class_order": [
+            "Cancelled",
+            "Completed",
+            "Returned"
+          ],
+          "risk_brier": 0.14581381807144503,
+          "risk_roc_auc": 0.5036000198896127,
+          "risk_average_precision": 0.17076161120381583
+        }
+      },
+      "test": {
+        "log_loss": 0.6027196896310613,
+        "macro_f1": 0.2998563694619379,
+        "balanced_accuracy": 0.3333333333333333,
+        "confusion_matrix": [
+          [
+            0,
+            305,
+            0
+          ],
+          [
+            0,
+            2714,
+            0
+          ],
+          [
+            0,
+            301,
+            0
+          ]
+        ],
+        "class_order": [
+          "Cancelled",
+          "Completed",
+          "Returned"
+        ],
+        "risk_brier": 0.14922767958854113,
+        "risk_roc_auc": 0.5,
+        "risk_average_precision": 0.1825301204819277
+      },
+      "test_baseline": {
+        "log_loss": 0.6027196896310613,
+        "macro_f1": 0.2998563694619379,
+        "balanced_accuracy": 0.3333333333333333,
+        "confusion_matrix": [
+          [
+            0,
+            305,
+            0
+          ],
+          [
+            0,
+            2714,
+            0
+          ],
+          [
+            0,
+            301,
+            0
+          ]
+        ],
+        "class_order": [
+          "Cancelled",
+          "Completed",
+          "Returned"
+        ],
+        "risk_brier": 0.14922767958854113,
+        "risk_roc_auc": 0.5,
+        "risk_average_precision": 0.1825301204819277
+      },
+      "test_log_loss_improvement": 0.0,
+      "supports_individual_ranking": false,
+      "feature_importance": [],
+      "limitations": [
+        "Synthetic outcomes may have no learnable signal. A baseline may be the best validated choice.",
+        "Outcome resolution timestamps are unavailable. A 30-day assumed maturation window purges near-boundary outcomes; this is not proof of actual availability. Operational deployment needs measured resolution timestamps.",
+        "Regions and product categories are assumed available at order creation. Customer profile groups are excluded because their historical timing is unknown.",
+        "Pending-order estimates are current-snapshot deployment scores fitted after test evaluation; they are not predictions recorded at their historical order times.",
+        "Probabilities are estimates, not explanations or proof that a particular order will fail."
+      ]
+    },
+    "stock_next_record": {
+      "task": "Probability the next observation is flagged out of stock or has zero units; NOT a fixed-day forecast.",
+      "selected_model": "prior_baseline",
+      "selection_metric": "lowest validation log loss",
+      "features": [
+        "stock_on_hand",
+        "reorder_threshold",
+        "supplier_delay_days",
+        "supplier_lead_days",
+        "previous_stock",
+        "days_since_previous",
+        "ordered_units_prior_7d",
+        "ordered_units_prior_30d",
+        "weekday",
+        "month",
+        "category"
+      ],
+      "excluded_features": [
+        "current stockout_flag",
+        "next stock quantity",
+        "next stockout flag",
+        "next observation date (split/label metadata only)",
+        "customer/region/campaign fields"
+      ],
+      "split": {
+        "method": "chronological 60/20/20 by unique feature date; whole days never overlap",
+        "validation_start": "2025-08-05",
+        "test_start": "2025-10-16",
+        "excluded_boundary_rows": 494,
+        "partitions": {
+          "train": {
+            "rows": 2652,
+            "start": "2025-01-01 00:00:00",
+            "end": "2025-08-03 00:00:00"
+          },
+          "validation": {
+            "rows": 719,
+            "start": "2025-08-05 00:00:00",
+            "end": "2025-10-13 00:00:00"
+          },
+          "test": {
+            "rows": 771,
+            "start": "2025-10-16 00:00:00",
+            "end": "2025-12-27 00:00:00"
+          }
+        },
+        "label_availability_rule": "Every training label date is strictly before validation starts; every validation label date is strictly before test starts."
+      },
+      "duplicate_product_dates_collapsed": 114,
+      "labeled_rows": 4636,
+      "observation_gap_days": {
+        "median": 13.0,
+        "mean": 17.73188093183779,
+        "max": 175
+      },
+      "validation": {
+        "prior_baseline": {
+          "log_loss": 0.43505475310795105,
+          "macro_f1": 0.4573584905660377,
+          "balanced_accuracy": 0.5,
+          "confusion_matrix": [
+            [
+              606,
+              0
+            ],
+            [
+              113,
+              0
+            ]
+          ],
+          "class_order": [
+            0,
+            1
+          ],
+          "risk_brier": 0.13249372897704817,
+          "risk_roc_auc": 0.5,
+          "risk_average_precision": 0.1571627260083449
+        },
+        "logistic_regression": {
+          "log_loss": 0.4365854724158891,
+          "macro_f1": 0.4573584905660377,
+          "balanced_accuracy": 0.5,
+          "confusion_matrix": [
+            [
+              606,
+              0
+            ],
+            [
+              113,
+              0
+            ]
+          ],
+          "class_order": [
+            0,
+            1
+          ],
+          "risk_brier": 0.13278085863960953,
+          "risk_roc_auc": 0.5242413621893164,
+          "risk_average_precision": 0.18072229470451154
+        },
+        "gradient_boosting": {
+          "log_loss": 0.44108327461922536,
+          "macro_f1": 0.4573584905660377,
+          "balanced_accuracy": 0.5,
+          "confusion_matrix": [
+            [
+              606,
+              0
+            ],
+            [
+              113,
+              0
+            ]
+          ],
+          "class_order": [
+            0,
+            1
+          ],
+          "risk_brier": 0.13361988728614574,
+          "risk_roc_auc": 0.5232775489938375,
+          "risk_average_precision": 0.1797752270881472
+        }
+      },
+      "test": {
+        "log_loss": 0.44129101359906253,
+        "macro_f1": 0.45627644569816644,
+        "balanced_accuracy": 0.5,
+        "confusion_matrix": [
+          [
+            647,
+            0
+          ],
+          [
+            124,
+            0
+          ]
+        ],
+        "class_order": [
+          0,
+          1
+        ],
+        "risk_brier": 0.1350286788019437,
+        "risk_roc_auc": 0.5,
+        "risk_average_precision": 0.1608300907911803
+      },
+      "test_baseline": {
+        "log_loss": 0.44129101359906253,
+        "macro_f1": 0.45627644569816644,
+        "balanced_accuracy": 0.5,
+        "confusion_matrix": [
+          [
+            647,
+            0
+          ],
+          [
+            124,
+            0
+          ]
+        ],
+        "class_order": [
+          0,
+          1
+        ],
+        "risk_brier": 0.1350286788019437,
+        "risk_roc_auc": 0.5,
+        "risk_average_precision": 0.1608300907911803
+      },
+      "supports_individual_ranking": false,
+      "limitations": [
+        "Stock observations are irregular. Next-record risk is not next-week risk.",
+        "Stockout flags contradict positive stock quantities in this sample. The target is a reported state, not verified physical availability.",
+        "Booked quantities before the observation date are known at order creation; final order status and future quantities are not features.",
+        "Boundary-crossing labels are purged so future stock labels cannot enter training or validation. No customer-region inventory relationship is assumed."
+      ]
+    },
+    "daily_units": {
+      "All categories": {
+        "selected_model": "recent_mean",
+        "selection_metric": "lowest MAE across two rolling validation blocks",
+        "validation": {
+          "seasonal_naive": {
+            "mae": 23.285714285714285,
+            "rmse": 27.80673094260247,
+            "wape_pct": 21.127673363577447
+          },
+          "recent_mean": {
+            "mae": 16.466836734693878,
+            "rmse": 19.83455164039536,
+            "wape_pct": 14.940746227201185
+          },
+          "holt_winters": {
+            "mae": 17.129791973684693,
+            "rmse": 20.27378095714934,
+            "wape_pct": 15.542261026026294
+          }
+        },
+        "validation_windows": [
+          {
+            "training_end": "2025-11-19",
+            "validation_start": "2025-11-20",
+            "validation_end": "2025-12-03"
+          },
+          {
+            "training_end": "2025-12-03",
+            "validation_start": "2025-12-04",
+            "validation_end": "2025-12-17"
+          }
+        ],
+        "test_start": "2025-12-18",
+        "test_end": "2025-12-31",
+        "test_days": 14,
+        "test": {
+          "mae": 14.653061224489798,
+          "rmse": 20.140450717450214,
+          "wape_pct": 12.600912600912602,
+          "interval_coverage_80": 0.9285714285714286,
+          "mean_interval_width": 52.92857142857143
+        },
+        "test_baseline": {
+          "mae": 19.571428571428573,
+          "rmse": 24.00297600596345,
+          "wape_pct": 16.83046683046683
+        },
+        "observed_days": 365,
+        "interval_method": "Validation-only absolute-error 80th percentile; pooled across forecast steps. Not a guaranteed coverage bound.",
+        "limitations": [
+          "Forecasts estimate observed completed sales, not uncensored customer demand; missed sales during stockouts are not observed.",
+          "Only 28 calibration errors at default horizon. Interval width is held constant across future steps; long-horizon coverage is not validated.",
+          "Model choice uses validation MAE, never the final test. The seasonal naive baseline is always available."
+        ]
+      },
+      "Beauty": {
+        "selected_model": "holt_winters",
+        "selection_metric": "lowest MAE across two rolling validation blocks",
+        "validation": {
+          "seasonal_naive": {
+            "mae": 6.964285714285714,
+            "rmse": 8.347369132162028,
+            "wape_pct": 39.39393939393939
+          },
+          "recent_mean": {
+            "mae": 5.418367346938775,
+            "rmse": 7.229651246281327,
+            "wape_pct": 30.64935064935065
+          },
+          "holt_winters": {
+            "mae": 5.303215915269777,
+            "rmse": 6.736958727311359,
+            "wape_pct": 29.99798901566743
+          }
+        },
+        "validation_windows": [
+          {
+            "training_end": "2025-11-19",
+            "validation_start": "2025-11-20",
+            "validation_end": "2025-12-03"
+          },
+          {
+            "training_end": "2025-12-03",
+            "validation_start": "2025-12-04",
+            "validation_end": "2025-12-17"
+          }
+        ],
+        "test_start": "2025-12-18",
+        "test_end": "2025-12-31",
+        "test_days": 14,
+        "test": {
+          "mae": 5.350154998535494,
+          "rmse": 6.680953810501505,
+          "wape_pct": 30.823938263167456,
+          "interval_coverage_80": 0.6428571428571429,
+          "mean_interval_width": 14.889417577643169
+        },
+        "test_baseline": {
+          "mae": 7.5,
+          "rmse": 10.333717350775292,
+          "wape_pct": 43.20987654320987
+        },
+        "observed_days": 365,
+        "interval_method": "Validation-only absolute-error 80th percentile; pooled across forecast steps. Not a guaranteed coverage bound.",
+        "limitations": [
+          "Forecasts estimate observed completed sales, not uncensored customer demand; missed sales during stockouts are not observed.",
+          "Only 28 calibration errors at default horizon. Interval width is held constant across future steps; long-horizon coverage is not validated.",
+          "Model choice uses validation MAE, never the final test. The seasonal naive baseline is always available."
+        ]
+      },
+      "Electronics": {
+        "selected_model": "recent_mean",
+        "selection_metric": "lowest MAE across two rolling validation blocks",
+        "validation": {
+          "seasonal_naive": {
+            "mae": 8.714285714285714,
+            "rmse": 10.58975245899814,
+            "wape_pct": 44.85294117647059
+          },
+          "recent_mean": {
+            "mae": 6.637755102040816,
+            "rmse": 7.784485486254971,
+            "wape_pct": 34.16491596638656
+          },
+          "holt_winters": {
+            "mae": 6.8687917272305645,
+            "rmse": 7.819690857882091,
+            "wape_pct": 35.3540750666279
+          }
+        },
+        "validation_windows": [
+          {
+            "training_end": "2025-11-19",
+            "validation_start": "2025-11-20",
+            "validation_end": "2025-12-03"
+          },
+          {
+            "training_end": "2025-12-03",
+            "validation_start": "2025-12-04",
+            "validation_end": "2025-12-17"
+          }
+        ],
+        "test_start": "2025-12-18",
+        "test_end": "2025-12-31",
+        "test_days": 14,
+        "test": {
+          "mae": 5.836734693877551,
+          "rmse": 8.216459339741947,
+          "wape_pct": 28.772635814889334,
+          "interval_coverage_80": 0.7142857142857143,
+          "mean_interval_width": 19.642857142857142
+        },
+        "test_baseline": {
+          "mae": 8.714285714285714,
+          "rmse": 10.071175275436895,
+          "wape_pct": 42.95774647887324
+        },
+        "observed_days": 365,
+        "interval_method": "Validation-only absolute-error 80th percentile; pooled across forecast steps. Not a guaranteed coverage bound.",
+        "limitations": [
+          "Forecasts estimate observed completed sales, not uncensored customer demand; missed sales during stockouts are not observed.",
+          "Only 28 calibration errors at default horizon. Interval width is held constant across future steps; long-horizon coverage is not validated.",
+          "Model choice uses validation MAE, never the final test. The seasonal naive baseline is always available."
+        ]
+      },
+      "Fashion": {
+        "selected_model": "holt_winters",
+        "selection_metric": "lowest MAE across two rolling validation blocks",
+        "validation": {
+          "seasonal_naive": {
+            "mae": 7.607142857142857,
+            "rmse": 9.777890511615624,
+            "wape_pct": 47.651006711409394
+          },
+          "recent_mean": {
+            "mae": 5.071428571428571,
+            "rmse": 7.069173522110932,
+            "wape_pct": 31.767337807606264
+          },
+          "holt_winters": {
+            "mae": 4.994315721272444,
+            "rmse": 6.883795106379323,
+            "wape_pct": 31.284304294324034
+          }
+        },
+        "validation_windows": [
+          {
+            "training_end": "2025-11-19",
+            "validation_start": "2025-11-20",
+            "validation_end": "2025-12-03"
+          },
+          {
+            "training_end": "2025-12-03",
+            "validation_start": "2025-12-04",
+            "validation_end": "2025-12-17"
+          }
+        ],
+        "test_start": "2025-12-18",
+        "test_end": "2025-12-31",
+        "test_days": 14,
+        "test": {
+          "mae": 6.108794194285646,
+          "rmse": 8.520988758703176,
+          "wape_pct": 34.90739539591797,
+          "interval_coverage_80": 0.8571428571428571,
+          "mean_interval_width": 19.434683853379195
+        },
+        "test_baseline": {
+          "mae": 7.785714285714286,
+          "rmse": 9.200155278192709,
+          "wape_pct": 44.48979591836735
+        },
+        "observed_days": 365,
+        "interval_method": "Validation-only absolute-error 80th percentile; pooled across forecast steps. Not a guaranteed coverage bound.",
+        "limitations": [
+          "Forecasts estimate observed completed sales, not uncensored customer demand; missed sales during stockouts are not observed.",
+          "Only 28 calibration errors at default horizon. Interval width is held constant across future steps; long-horizon coverage is not validated.",
+          "Model choice uses validation MAE, never the final test. The seasonal naive baseline is always available."
+        ]
+      },
+      "Grocery": {
+        "selected_model": "recent_mean",
+        "selection_metric": "lowest MAE across two rolling validation blocks",
+        "validation": {
+          "seasonal_naive": {
+            "mae": 10.428571428571429,
+            "rmse": 13.44831375515692,
+            "wape_pct": 54.074074074074076
+          },
+          "recent_mean": {
+            "mae": 8.489795918367346,
+            "rmse": 9.902908766661255,
+            "wape_pct": 44.02116402116402
+          },
+          "holt_winters": {
+            "mae": 8.516541470970104,
+            "rmse": 10.312541151546528,
+            "wape_pct": 44.15984466428943
+          }
+        },
+        "validation_windows": [
+          {
+            "training_end": "2025-11-19",
+            "validation_start": "2025-11-20",
+            "validation_end": "2025-12-03"
+          },
+          {
+            "training_end": "2025-12-03",
+            "validation_start": "2025-12-04",
+            "validation_end": "2025-12-17"
+          }
+        ],
+        "test_start": "2025-12-18",
+        "test_end": "2025-12-31",
+        "test_days": 14,
+        "test": {
+          "mae": 6.602040816326531,
+          "rmse": 8.937995026964426,
+          "wape_pct": 31.12073112073113,
+          "interval_coverage_80": 0.8571428571428571,
+          "mean_interval_width": 23.64285714285715
+        },
+        "test_baseline": {
+          "mae": 12.357142857142858,
+          "rmse": 15.64106317175585,
+          "wape_pct": 58.24915824915825
+        },
+        "observed_days": 365,
+        "interval_method": "Validation-only absolute-error 80th percentile; pooled across forecast steps. Not a guaranteed coverage bound.",
+        "limitations": [
+          "Forecasts estimate observed completed sales, not uncensored customer demand; missed sales during stockouts are not observed.",
+          "Only 28 calibration errors at default horizon. Interval width is held constant across future steps; long-horizon coverage is not validated.",
+          "Model choice uses validation MAE, never the final test. The seasonal naive baseline is always available."
+        ]
+      },
+      "Home": {
+        "selected_model": "recent_mean",
+        "selection_metric": "lowest MAE across two rolling validation blocks",
+        "validation": {
+          "seasonal_naive": {
+            "mae": 7.535714285714286,
+            "rmse": 9.563696237035433,
+            "wape_pct": 43.68530020703934
+          },
+          "recent_mean": {
+            "mae": 6.015306122448979,
+            "rmse": 7.40087556871979,
+            "wape_pct": 34.87133984028394
+          },
+          "holt_winters": {
+            "mae": 6.528231504045728,
+            "rmse": 7.721077554766467,
+            "wape_pct": 37.84482031330857
+          }
+        },
+        "validation_windows": [
+          {
+            "training_end": "2025-11-19",
+            "validation_start": "2025-11-20",
+            "validation_end": "2025-12-03"
+          },
+          {
+            "training_end": "2025-12-03",
+            "validation_start": "2025-12-04",
+            "validation_end": "2025-12-17"
+          }
+        ],
+        "test_start": "2025-12-18",
+        "test_end": "2025-12-31",
+        "test_days": 14,
+        "test": {
+          "mae": 6.214285714285714,
+          "rmse": 7.694501747537468,
+          "wape_pct": 30.851063829787233,
+          "interval_coverage_80": 0.6428571428571429,
+          "mean_interval_width": 16.857142857142858
+        },
+        "test_baseline": {
+          "mae": 8.857142857142858,
+          "rmse": 10.528871870107588,
+          "wape_pct": 43.97163120567376
+        },
+        "observed_days": 365,
+        "interval_method": "Validation-only absolute-error 80th percentile; pooled across forecast steps. Not a guaranteed coverage bound.",
+        "limitations": [
+          "Forecasts estimate observed completed sales, not uncensored customer demand; missed sales during stockouts are not observed.",
+          "Only 28 calibration errors at default horizon. Interval width is held constant across future steps; long-horizon coverage is not validated.",
+          "Model choice uses validation MAE, never the final test. The seasonal naive baseline is always available."
+        ]
+      },
+      "Sports": {
+        "selected_model": "recent_mean",
+        "selection_metric": "lowest MAE across two rolling validation blocks",
+        "validation": {
+          "seasonal_naive": {
+            "mae": 8.321428571428571,
+            "rmse": 9.850670753086527,
+            "wape_pct": 40.38128249566724
+          },
+          "recent_mean": {
+            "mae": 5.63265306122449,
+            "rmse": 7.53309026758553,
+            "wape_pct": 27.333498390690767
+          },
+          "holt_winters": {
+            "mae": 5.83819094674034,
+            "rmse": 7.432089560947879,
+            "wape_pct": 28.33090927360997
+          }
+        },
+        "validation_windows": [
+          {
+            "training_end": "2025-11-19",
+            "validation_start": "2025-11-20",
+            "validation_end": "2025-12-03"
+          },
+          {
+            "training_end": "2025-12-03",
+            "validation_start": "2025-12-04",
+            "validation_end": "2025-12-17"
+          }
+        ],
+        "test_start": "2025-12-18",
+        "test_end": "2025-12-31",
+        "test_days": 14,
+        "test": {
+          "mae": 5.785714285714286,
+          "rmse": 7.781863398902841,
+          "wape_pct": 29.24187725631769,
+          "interval_coverage_80": 0.9285714285714286,
+          "mean_interval_width": 19.28571428571428
+        },
+        "test_baseline": {
+          "mae": 9.214285714285714,
+          "rmse": 10.525479290071036,
+          "wape_pct": 46.57039711191336
+        },
+        "observed_days": 365,
+        "interval_method": "Validation-only absolute-error 80th percentile; pooled across forecast steps. Not a guaranteed coverage bound.",
+        "limitations": [
+          "Forecasts estimate observed completed sales, not uncensored customer demand; missed sales during stockouts are not observed.",
+          "Only 28 calibration errors at default horizon. Interval width is held constant across future steps; long-horizon coverage is not validated.",
+          "Model choice uses validation MAE, never the final test. The seasonal naive baseline is always available."
+        ]
+      }
+    },
+    "daily_revenue": {
+      "selected_model": "recent_mean",
+      "selection_metric": "lowest MAE across two rolling validation blocks",
+      "validation": {
+        "seasonal_naive": {
+          "mae": 4761.873107142857,
+          "rmse": 5709.4135532774035,
+          "wape_pct": 25.00835798947183
+        },
+        "recent_mean": {
+          "mae": 3154.583572704082,
+          "rmse": 3854.7193328961584,
+          "wape_pct": 16.56721074225046
+        },
+        "holt_winters": {
+          "mae": 3207.1503732552437,
+          "rmse": 3868.489075076629,
+          "wape_pct": 16.843280544398837
+        }
+      },
+      "validation_windows": [
+        {
+          "training_end": "2025-11-19",
+          "validation_start": "2025-11-20",
+          "validation_end": "2025-12-03"
+        },
+        {
+          "training_end": "2025-12-03",
+          "validation_start": "2025-12-04",
+          "validation_end": "2025-12-17"
+        }
+      ],
+      "test_start": "2025-12-18",
+      "test_end": "2025-12-31",
+      "test_days": 14,
+      "test": {
+        "mae": 2776.6549132653063,
+        "rmse": 3755.805047642336,
+        "wape_pct": 14.198011573958658,
+        "interval_coverage_80": 0.8571428571428571,
+        "mean_interval_width": 11352.723785714279
+      },
+      "test_baseline": {
+        "mae": 3369.3335,
+        "rmse": 4657.004087637993,
+        "wape_pct": 17.22858530276275
+      },
+      "observed_days": 365,
+      "interval_method": "Validation-only absolute-error 80th percentile; pooled across forecast steps. Not a guaranteed coverage bound.",
+      "limitations": [
+        "Forecasts estimate observed completed sales, not uncensored customer demand; missed sales during stockouts are not observed.",
+        "Only 28 calibration errors at default horizon. Interval width is held constant across future steps; long-horizon coverage is not validated.",
+        "Model choice uses validation MAE, never the final test. The seasonal naive baseline is always available."
+      ]
+    },
+    "customer_groups": {
+      "method": "KMeans on standardized log1p customer recency, frequency, monetary value",
+      "seed": 42,
+      "customers_clustered": 2971,
+      "selected_k": 2,
+      "silhouette": 0.36598988259117543,
+      "davies_bouldin": 1.0429365649450593,
+      "candidate_silhouettes": {
+        "2": 0.36598988259117543,
+        "3": 0.3090484928061669,
+        "4": 0.3056983309716527,
+        "5": 0.3032041770718513,
+        "6": 0.28562098545422243
+      },
+      "as_of": "2025-12-31",
+      "groups": [
+        {
+          "customers": 1896,
+          "mean_recency_days": 49.005274261603375,
+          "mean_completed_orders": 5.827004219409282,
+          "mean_spend": 3155.6784483122365,
+          "revenue": 5983166.338,
+          "group": "Group 1: higher spending, more recent"
+        },
+        {
+          "customers": 1075,
+          "mean_recency_days": 125.33674418604652,
+          "mean_completed_orders": 2.7106976744186047,
+          "mean_spend": 1226.5413125581397,
+          "revenue": 1318531.911,
+          "group": "Group 2: lower spending, less recent"
+        }
+      ],
+      "limitations": [
+        "Unsupervised group separation is not prediction accuracy or proof of meaningful business types.",
+        "Features use only completed orders at or before the snapshot date. Customers with no completed purchases are not clustered.",
+        "Supplied customer_segment is not a training target; new groups are derived independently. Low silhouette means weak group separation."
+      ]
+    },
+    "unusual_days": {
+      "method": "IsolationForest",
+      "seed": 42,
+      "features": [
+        "completed_revenue",
+        "orders",
+        "cancel_rate",
+        "return_rate",
+        "average_discount",
+        "units_sold"
+      ],
+      "training_days": 292,
+      "training_end": "2025-10-19",
+      "test_start": "2025-10-20",
+      "test_days": 73,
+      "flagged_days": 10,
+      "assumed_training_contamination": 0.05,
+      "performance_status": "No labeled anomalies exist; precision, recall, and anomaly accuracy cannot be measured.",
+      "limitations": [
+        "Flags are unusual historical patterns, not fraud findings or predictions of future problems.",
+        "Training uses the earliest 80% of days. Later days are scored without refitting.",
+        "Explanations compare observed metrics with training medians and IQR; they are descriptive, not causal explanations of the model."
+      ]
+    },
+    "campaign_conversions": {
+      "task": "Expected reported conversion count given measured campaign spend, impressions, clicks, date, channel, and category.",
+      "prediction_time": "After engagement counts are available; diagnostic benchmark, not a pre-launch forecast.",
+      "selected_model": "gradient_boosting",
+      "selection_metric": "lowest validation MAE",
+      "features": [
+        "spend",
+        "impressions",
+        "clicks",
+        "weekday",
+        "month",
+        "channel",
+        "category"
+      ],
+      "excluded_features": [
+        "conversions (target)",
+        "conversion rate",
+        "cost per conversion",
+        "campaign_id",
+        "transaction revenue"
+      ],
+      "excluded_invalid_count_rows": 171,
+      "eligible_rows": 1029,
+      "split": {
+        "method": "chronological 60/20/20 by unique feature date; whole days never overlap",
+        "validation_start": "2025-08-04",
+        "test_start": "2025-10-16",
+        "excluded_boundary_rows": 0,
+        "partitions": {
+          "train": {
+            "rows": 623,
+            "start": "2025-01-01 00:00:00",
+            "end": "2025-08-03 00:00:00"
+          },
+          "validation": {
+            "rows": 203,
+            "start": "2025-08-04 00:00:00",
+            "end": "2025-10-15 00:00:00"
+          },
+          "test": {
+            "rows": 203,
+            "start": "2025-10-16 00:00:00",
+            "end": "2025-12-31 00:00:00"
+          }
+        }
+      },
+      "validation": {
+        "click_rate_baseline": {
+          "mae": 407.617608973098,
+          "rmse": 502.2920107221704,
+          "wape_pct": 57.374308095532506
+        },
+        "poisson_regression": {
+          "mae": 357.34768849539046,
+          "rmse": 408.64206658543765,
+          "wape_pct": 50.29855414885681
+        },
+        "gradient_boosting": {
+          "mae": 356.88612501454605,
+          "rmse": 417.0867414434988,
+          "wape_pct": 50.23358667745064
+        }
+      },
+      "output_constraint": "0 <= expected conversions <= measured clicks, matching the explicitly chosen count-chain cohort.",
+      "test": {
+        "mae": 361.36884953731396,
+        "rmse": 426.8378402161946,
+        "wape_pct": 47.32338785920932
+      },
+      "test_baseline": {
+        "mae": 447.6757583461292,
+        "rmse": 550.9193569598286,
+        "wape_pct": 58.62578795738723
+      },
+      "limitations": [
+        "Rows with clicks exceeding impressions, conversions exceeding clicks, or zero clicks are excluded from modeling but retained in raw data analysis.",
+        "Conversions are reported counts, not unique customers or attributable orders.",
+        "Inputs contain measured clicks, so this model must not be presented as predicting conversions before a campaign runs.",
+        "Synthetic campaigns may contain little learnable structure. A click-rate baseline is a legitimate selected model."
+      ]
+    }
+  },
+  "artifacts": [
+    "order_holdout_predictions.csv",
+    "pending_order_estimates.csv",
+    "stock_holdout_predictions.csv",
+    "stock_latest_estimates.csv",
+    "daily_units_forecasts.csv",
+    "daily_units_holdout.csv",
+    "revenue_forecast.csv",
+    "revenue_holdout.csv",
+    "customer_groups.csv",
+    "customer_profile_context.csv",
+    "unusual_days.csv",
+    "campaign_holdout_predictions.csv",
+    "restock_scenario.csv",
+    "campaign_sales_context.csv",
+    "external_units_forecast.csv",
+    "external_units_holdout.csv"
+  ],
+  "artifact_sha256": {
+    "order_holdout_predictions.csv": "cc69293daa73b629bf4058f7e5db5bbf64909a634c61337237c1cecd060c36a2",
+    "pending_order_estimates.csv": "81c2fd7005178eaae21720aec8c50df86840a7bb38387264c4b53d013bc00918",
+    "stock_holdout_predictions.csv": "6febcfd68b6823ae589b5ab57dad729c95efccee040e20dc473217e787132354",
+    "stock_latest_estimates.csv": "ed91df8e5f94d3173eb6b9c78e578f6a4c0bafd3ceb9b47afea9e91697db9db4",
+    "daily_units_forecasts.csv": "225b1dc307a88153845ce4884e2978bfe33baed487c43d1f230c67b355f3230d",
+    "daily_units_holdout.csv": "9457ea567c0c1bf62d1ac0352381dc1c320e1dd7539d9e2c26ba5a519bea00c2",
+    "revenue_forecast.csv": "1bb3772757f9bbc0726192ee65114f33b3028aa665e4e5668d48b9cd870b7131",
+    "revenue_holdout.csv": "67feccb8e15d572c9c035f00cf91205c572e85ca0d5b0044b9938374fa02507c",
+    "customer_groups.csv": "4c562864a7014c9548bfc2a8e571faad57fd95e1e0ca78e396bb414d194ebad3",
+    "customer_profile_context.csv": "fa5b9738a8f5df069f58dcde91298a6ab75f9a8471e8c9e0b1ef1c76c25b0a47",
+    "unusual_days.csv": "847b38b0220b6a0183841a23d86a4b4f6466baa7006045be15db2c6a7197d32f",
+    "campaign_holdout_predictions.csv": "a5d557a6db20ffa204e2d459d4bd113289a4d5b998afe206c62e1ec19dd3a439",
+    "restock_scenario.csv": "aad73ef7b3419bc62e3a9703a6bcf502b1219ccd80cafa9c46ba88efa0591f8f",
+    "campaign_sales_context.csv": "124a14e04c4ffad759964e2ca9725fb7fb209e6373115ad2699a34dab2bd8682",
+    "external_units_forecast.csv": "a563d87ec79024c0f1110d299892b2d680496515df49f41889e808494aafe135",
+    "external_units_holdout.csv": "f8de171bb780079bb6093c57f89a70e251c975d8ea2c64eb5c30f75d781b64c0"
+  },
+  "customer_profile_context": {
+    "rows": 3000,
+    "file": "customer_profile_context.csv",
+    "interpretation": "Supplied region, segment, signup, and preferred channel describe the customer-file snapshot. Preferred-channel match is descriptive; signup inconsistencies are audited separately."
+  },
+  "restock_policy": {
+    "method": "order-up-to scenario using 30-day observed completed units, supplier lead plus recorded delay, 7-day review, safety multiplier 1.28",
+    "formula": "trigger = mean * lead + z * std * sqrt(lead); target = ceil(mean * (lead + review) + z * std * sqrt(lead + review)); quantity=max(0,target-stock) only at/below trigger",
+    "blocked_records": 135,
+    "limitations": [
+      "Not mathematically optimal inventory. Missing holding costs, ordering costs, open purchase orders, uncensored demand, and true stock movements prevent validated optimization.",
+      "Flag/quantity conflicts and stock records older than 14 days (or future-dated) block quantity suggestions pending verification.",
+      "Safety multiplier and normal-demand approximation are user assumptions, not an empirically established service guarantee."
+    ]
+  },
+  "action_plan": [
+    {
+      "id": "stock-record-check",
+      "priority": "High",
+      "title": "Check stock records that disagree",
+      "owner_role": "Stock team",
+      "supporting_numbers": "46 latest selected records say out of stock while listing units left.",
+      "steps": [
+        "Find these products in the Stock page.",
+        "Count the actual units and check the record date.",
+        "Correct the flag or quantity in the source system before deciding what to order."
+      ],
+      "track": "Number of conflicting stock records still unresolved.",
+      "limit": "A flag is not proof of a physical stockout. Stock uses date/category filters only."
+    },
+    {
+      "id": "order-fallout-check",
+      "priority": "High",
+      "title": "Find out why Home orders were cancelled or returned",
+      "owner_role": "Sales and returns team",
+      "supporting_numbers": "\u20b93,29,781.57 across a category with 3,141 orders; 17.8% cancelled or returned.",
+      "steps": [
+        "Open Sales and compare this category by region and shopping channel.",
+        "Read cancellation and return reasons in the order system; these reasons are not supplied here.",
+        "Separate delivery, product-quality, and customer-request issues before choosing an intervention.",
+        "Track the cancellation and return rates over the next comparable period."
+      ],
+      "track": "Cancelled and returned orders as a share of all category orders; include order counts.",
+      "limit": "Affected order value is not promised recovery. These records cannot establish the cause."
+    },
+    {
+      "id": "restock-review",
+      "priority": "Medium",
+      "title": "Review products that are running low",
+      "owner_role": "Stock and purchasing team",
+      "supporting_numbers": "27 latest selected product records are at or below the supplied restock level.",
+      "steps": [
+        "Confirm current stock and expected supplier delivery dates.",
+        "Open the restock planner and review recent sales, record age, and its assumptions.",
+        "Check budget and outstanding purchase orders before approving quantities."
+      ],
+      "track": "Products below their restock level, stock record age, and actual availability.",
+      "limit": "The planner is a scenario. Outstanding orders, holding costs, and lost demand are missing."
+    },
+    {
+      "id": "campaign-results-check",
+      "priority": "Medium",
+      "title": "Check the cost of Store campaign results",
+      "owner_role": "Marketing team",
+      "supporting_numbers": "\u20b95.71 per reported conversion versus \u20b94.97 on Web.",
+      "steps": [
+        "Check the data-quality warnings for impossible click or conversion counts.",
+        "Confirm that the channels count the same type of conversion.",
+        "Check result quality, then run a small controlled budget test if the comparison is still meaningful."
+      ],
+      "track": "Cost per valid reported conversion and the number and quality of those results.",
+      "limit": "Campaigns cannot be connected to individual orders, so no revenue attribution or ROAS is calculated."
+    }
+  ],
+  "external_benchmark": {
+    "selected_model": "holt_winters",
+    "selection_metric": "lowest MAE across two rolling validation blocks",
+    "validation": {
+      "seasonal_naive": {
+        "mae": 6379.392857142857,
+        "rmse": 8178.545629092184,
+        "wape_pct": 25.656519809425042
+      },
+      "recent_mean": {
+        "mae": 10318.191326530612,
+        "rmse": 12751.452475215463,
+        "wape_pct": 41.49750393098296
+      },
+      "holt_winters": {
+        "mae": 6365.6074935079405,
+        "rmse": 7730.23808499801,
+        "wape_pct": 25.60107809841906
+      }
+    },
+    "validation_windows": [
+      {
+        "training_end": "2011-10-28",
+        "validation_start": "2011-10-29",
+        "validation_end": "2011-11-11"
+      },
+      {
+        "training_end": "2011-11-11",
+        "validation_start": "2011-11-12",
+        "validation_end": "2011-11-25"
+      }
+    ],
+    "test_start": "2011-11-26",
+    "test_end": "2011-12-09",
+    "test_days": 14,
+    "test": {
+      "mae": 9714.422606516022,
+      "rmse": 19391.02074629787,
+      "wape_pct": 32.83658632066994,
+      "interval_coverage_80": 0.7857142857142857,
+      "mean_interval_width": 17507.373940260015
+    },
+    "test_baseline": {
+      "mae": 11052.42857142857,
+      "rmse": 21464.653556153993,
+      "wape_pct": 37.359299624799
+    },
+    "observed_days": 374,
+    "interval_method": "Validation-only absolute-error 80th percentile; pooled across forecast steps. Not a guaranteed coverage bound.",
+    "limitations": [
+      "Forecasts estimate observed completed sales, not uncensored customer demand; missed sales during stockouts are not observed.",
+      "Only 28 calibration errors at default horizon. Interval width is held constant across future steps; long-horizon coverage is not validated.",
+      "Model choice uses validation MAE, never the final test. The seasonal naive baseline is always available.",
+      "Excluded cancellations and nonpositive rows; does not estimate returns or net revenue.",
+      "Zero-filled dates mean no recorded sales, not necessarily zero demand. Final source day may be incomplete.",
+      "External business and time period differ from the challenge; no direct calibration or causal impact claim."
+    ],
+    "dataset": "UCI Online Retail",
+    "source_sha256": "af239bea3f002a62235c91aed12225ad119d9eb31ad3758cfed8d4e15fc39522",
+    "provenance": {
+      "dataset": "UCI Online Retail",
+      "creator": "Daqing Chen",
+      "year": 2015,
+      "doi": "10.24432/C5BW33",
+      "license": "CC BY 4.0",
+      "source_url": "https://archive.ics.uci.edu/dataset/352/online+retail",
+      "download_url": "https://archive.ics.uci.edu/static/public/352/online+retail.zip",
+      "archive_sha256": "f5385cbb54bbebf7196389109c6b0621faab0c304e3702548165e71c84aede8b",
+      "derived_sha256": "af239bea3f002a62235c91aed12225ad119d9eb31ad3758cfed8d4e15fc39522",
+      "original_rows": 541909,
+      "eligible_positive_sales_rows": 530104,
+      "excluded_rows": 11805,
+      "calendar_days": 374,
+      "start": "2010-12-01",
+      "end": "2011-12-09",
+      "transformation": "Exclude cancellation-prefixed invoices, nonpositive quantities/prices and missing dates; aggregate all countries by calendar date; fill absent dates with zero recorded sales. No deduplication. No customer IDs or descriptions retained. Last source date may be partial. Sales are positive recorded sales, not net revenue after returns.",
+      "scope": "Separate locally fitted demand benchmark; never joined to official Track 4 records. Currency is GBP, no currency conversion."
+    },
+    "scope": "Independent fit on external daily positive-sale units. Not transfer validation of the Track 4 model and not pooled with Track 4."
+  }
+}

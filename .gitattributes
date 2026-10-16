@@ -1,0 +1,5 @@
+# Preserve original dataset and generated artifact bytes across Windows/Linux.
+# Evaluation hashes deliberately validate exact bytes, including line endings.
+data/track4/04_business_money_leak/*.csv -text
+reports/*.csv -text
+data/external/**/*.csv -text
